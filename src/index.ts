@@ -5,8 +5,11 @@
  */
 
 import internal from "stream";
+import AstPrinter from "./AstPrinter";
+import { Binary, Expr, Grouping, Literal, Unary } from "./Expr";
 import Scanner from "./Scanner";
 import Token from "./Token";
+import TokenType from "./TokenType";
 
 const fs = require("fs");
 
@@ -22,14 +25,22 @@ class Eevee {
     }
 
     // REPL mode.
-    if (mode === "-e") {
-      this.runREPL();
-    }
+    // if (mode === "-e") {
+    //   this.runREPL();
+    // }
 
-    // File read mode.
-    if (mode === "-f" && path) {
-      this.runFile(path);
-    }
+    // // File read mode.
+    // if (mode === "-f" && path) {
+    //   this.runFile(path);
+    // }
+
+    const expression: Expr = new Binary(
+      new Unary(new Token(TokenType.MINUS, "-", null, 1), new Literal(123)),
+      new Token(TokenType.STAR, "*", null, 1),
+      new Grouping(new Literal(45.67))
+    );
+
+    console.log(new AstPrinter().print(expression).toString());
 
     if (mode === "--help") {
       console.log("\x1B[1m\x1b[34m-------- Eevee --------\x1b[0m\n");

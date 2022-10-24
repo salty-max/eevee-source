@@ -7,7 +7,8 @@
   "repository": "https://github.com/salty-max/gero.git",
   "main": "dist/index.js",
   "bin": {
-    "eevee": "./bin/eevee"
+    "eevee": "./bin/eevee",
+    "generate_ast": "./bin/generate_ast"
   },
   "keywords": [
     "eevee"
