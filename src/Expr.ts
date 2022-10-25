@@ -2,6 +2,7 @@ import Token from "./Token";
 
 export interface Visitor<R> {
   visitBinaryExpr<R>(expr: Binary): R;
+  visitConditionalExpr<R>(expr: Conditional): R;
   visitGroupingExpr<R>(expr: Grouping): R;
   visitLiteralExpr<R>(expr: Literal): R;
   visitPostfixExpr<R>(expr: Postfix): R;
@@ -29,6 +30,23 @@ export class Binary extends Expr {
   }
 }
 
+export class Conditional extends Expr {
+  condition: Expr;
+  consequent: Expr;
+  alternate: Expr;
+
+  constructor(condition: Expr, consequent: Expr, alternate: Expr) {
+    super();
+    this.condition = condition;
+    this.consequent = consequent;
+    this.alternate = alternate;
+  }
+
+  override accept<R>(visitor: Visitor<R>): R {
+    return visitor.visitConditionalExpr(this);
+  }
+}
+
 export class Grouping extends Expr {
   expression: Expr;
 
@@ -43,9 +61,9 @@ export class Grouping extends Expr {
 }
 
 export class Literal extends Expr {
-  value: Object;
+  value: Object | null;
 
-  constructor(value: Object) {
+  constructor(value: Object | null) {
     super();
     this.value = value;
   }
