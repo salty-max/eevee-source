@@ -9,6 +9,7 @@ export interface Visitor {
   visitLiteralStringExpr(expr: LiteralString): any;
   visitLiteralNullExpr(expr: LiteralNull): any;
   visitLiteralBooleanExpr(expr: LiteralBoolean): any;
+  visitLogicalExpr(expr: Logical): any;
   visitPostfixExpr(expr: Postfix): any;
   visitUnaryExpr(expr: Unary): any;
   visitVariableExpr(expr: Variable): any;
@@ -129,6 +130,23 @@ export class LiteralBoolean extends Expr {
 
   override accept(visitor: Visitor): any {
     return visitor.visitLiteralBooleanExpr(this);
+  }
+}
+
+export class Logical extends Expr {
+  left: Expr;
+  operator: Token;
+  right: Expr;
+
+  constructor(left: Expr, operator: Token, right: Expr) {
+    super();
+    this.left = left;
+    this.operator = operator;
+    this.right = right;
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitLogicalExpr(this);
   }
 }
 

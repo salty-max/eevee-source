@@ -3,6 +3,7 @@ import Token from "./Token";
 
 export interface Visitor {
   visitExpressionStmt(stmt: Expression): any;
+  visitIfStmt(stmt: If): any;
   visitPrintStmt(stmt: Print): any;
   visitVarStmt(stmt: Var): any;
   visitBlockStmt(stmt: Block): any;
@@ -22,6 +23,23 @@ export class Expression extends Stmt {
 
   override accept(visitor: Visitor): any {
     return visitor.visitExpressionStmt(this);
+  }
+}
+
+export class If extends Stmt {
+  condition: Expr;
+  consequent: Array<Stmt | null>;
+  alternate: Array<Stmt | null>;
+
+  constructor(condition: Expr, consequent: Array<Stmt | null>, alternate: Array<Stmt | null>) {
+    super();
+    this.condition = condition;
+    this.consequent = consequent;
+    this.alternate = alternate;
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitIfStmt(this);
   }
 }
 

@@ -10,13 +10,14 @@ import {
   LiteralNull,
   LiteralNumber,
   LiteralString,
+  Logical,
   Postfix,
   Unary,
   Variable,
   Visitor,
 } from "./Expr";
 import RuntimeError from "./RuntimeError";
-import { Block, Expression, Print, Stmt, Var } from "./Stmt";
+import { Block, Expression, If, Print, Stmt, Var } from "./Stmt";
 import Token from "./Token";
 import TokenType from "./TokenType";
 
@@ -80,6 +81,16 @@ export class Interpreter implements Visitor {
     this.evaluate(stmt.expression);
   }
 
+  public visitIfStmt(stmt: If) {
+    if (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.executeBlock(stmt.consequent, new Environment(this.environment));
+    } else if (stmt.alternate) {
+      this.executeBlock(stmt.alternate, new Environment(this.environment));
+    }
+
+    return null;
+  }
+
   public visitPrintStmt(stmt: Print) {
     const value = this.evaluate(stmt.expression);
     Eevee.log(this.stringify(value));
@@ -111,6 +122,22 @@ export class Interpreter implements Visitor {
   }
   public visitLiteralNullExpr(expr: LiteralNull): null {
     return expr.value;
+  }
+
+  public visitLogicalExpr(expr: Logical) {
+    const left = this.evaluate(expr.left);
+
+    if (expr.operator.type === TokenType.OR) {
+      if (this.isTruthy(left)) {
+        return left;
+      }
+    } else {
+      if (!this.isTruthy(left)) {
+        return left;
+      }
+    }
+
+    return this.evaluate(expr.right);
   }
 
   public visitGroupingExpr(expr: Grouping) {

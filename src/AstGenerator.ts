@@ -20,6 +20,7 @@ class AstGenerator {
       "LiteralString    -> value: string",
       "LiteralNull      -> value: null",
       "LiteralBoolean   -> value: boolean",
+      "Logical          -> left: Expr, operator: Token, right: Expr",
       "Postfix          -> left: Expr, operator: Token",
       "Unary            -> operator: Token, right: Expr",
       "Variable         -> name: Token",
@@ -27,6 +28,7 @@ class AstGenerator {
 
     this.defineAst(outputDir, "Stmt", [
       "Expression       -> expression: Expr",
+      "If               -> condition: Expr, consequent: Array<Stmt | null>, alternate: Array<Stmt | null>",
       "Print            -> expression: Expr",
       "Var              -> name: Token, initializer: Expr | null",
       "Block            -> statements: Array<Stmt | null>",
