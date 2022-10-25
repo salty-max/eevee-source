@@ -181,7 +181,15 @@ class Scanner {
 
     if (this.isAtEnd()) {
       Eevee.error(this.line, this.start, "Unterminated string.");
+      return;
     }
+
+    // The closing ".
+    this.advance();
+
+    // Trim the surrounding quotes.
+    const value = this.source.substring(this.start + 1, this.current - 1);
+    this.addToken(TokenType.STRING, value);
   }
 
   private advance(): string {
