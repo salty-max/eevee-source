@@ -5,19 +5,21 @@
  */
 import readline from "readline";
 import yargs from "yargs";
+import { Expr } from "./Expr";
 
 import { Interpreter } from "./Interpreter";
 import Parser from "./Parser";
 import RuntimeError from "./RuntimeError";
 import Scanner from "./Scanner";
+import { Stmt } from "./Stmt";
 import Token from "./Token";
 import TokenType from "./TokenType";
 
 const fs = require("fs");
 
 export class Eevee {
-  private static readonly interpreter: Interpreter = new Interpreter();
-  private static hadError: boolean = false;
+  private static readonly interpreter = new Interpreter();
+  private static hadError = false;
 
   public static main(): number {
     const args = yargs(process.argv.slice(2))
@@ -99,13 +101,20 @@ export class Eevee {
   }
 
   private static run(source: string): void {
-    const scanner: Scanner = new Scanner(source);
-    const tokens: Array<Token> = scanner.scanTokens();
-    const parser: Parser = new Parser(tokens);
-    const expression = parser.parse();
+    const scanner = new Scanner(source);
+    const tokens = scanner.scanTokens();
+    const parser = new Parser(tokens);
+    const syntax = parser.parseREPL();
     if (this.hadError) return;
 
-    expression && this.interpreter.interpret(expression);
+    if (syntax instanceof Array<Stmt>) {
+      this.interpreter.interpretStmt(syntax as Array<Stmt>);
+    } else {
+      const result = this.interpreter.interpret(syntax as Expr);
+      if (result) {
+        Eevee.log(`= ${result}`);
+      }
+    }
   }
 
   static log(message: string): void {

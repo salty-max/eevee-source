@@ -1,1 +1,8 @@
-3 > 2
+let x = 0;
+
+do
+  let y = 2;
+  x = y * y * y * y * y * y;
+end
+
+print x;

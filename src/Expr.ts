@@ -1,6 +1,7 @@
 import Token from "./Token";
 
 export interface Visitor {
+  visitAssignExpr(expr: Assign): any;
   visitBinaryExpr(expr: Binary): any;
   visitConditionalExpr(expr: Conditional): any;
   visitGroupingExpr(expr: Grouping): any;
@@ -10,10 +11,26 @@ export interface Visitor {
   visitLiteralBooleanExpr(expr: LiteralBoolean): any;
   visitPostfixExpr(expr: Postfix): any;
   visitUnaryExpr(expr: Unary): any;
+  visitVariableExpr(expr: Variable): any;
 }
 
 export abstract class Expr {
   abstract accept(visitor: Visitor): any
+}
+
+export class Assign extends Expr {
+  name: Token;
+  value: Expr;
+
+  constructor(name: Token, value: Expr) {
+    super();
+    this.name = name;
+    this.value = value;
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitAssignExpr(this);
+  }
 }
 
 export class Binary extends Expr {
@@ -142,6 +159,19 @@ export class Unary extends Expr {
 
   override accept(visitor: Visitor): any {
     return visitor.visitUnaryExpr(this);
+  }
+}
+
+export class Variable extends Expr {
+  name: Token;
+
+  constructor(name: Token) {
+    super();
+    this.name = name;
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitVariableExpr(this);
   }
 }
 

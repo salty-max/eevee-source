@@ -147,7 +147,7 @@ class Scanner {
     const text: string = this.source.substring(this.start, this.current);
     let type: TokenType = Scanner.keywords.get(text)!;
 
-    if (type === null) type = TokenType.IDENTIFIER;
+    if (!type) type = TokenType.IDENTIFIER;
 
     this.addToken(type);
   }

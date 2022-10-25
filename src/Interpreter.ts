@@ -1,5 +1,7 @@
 import { Eevee } from ".";
+import Environment from "./Environment";
 import {
+  Assign,
   Binary,
   Conditional,
   Expr,
@@ -10,24 +12,92 @@ import {
   LiteralString,
   Postfix,
   Unary,
+  Variable,
   Visitor,
 } from "./Expr";
 import RuntimeError from "./RuntimeError";
+import { Block, Expression, Print, Stmt, Var } from "./Stmt";
 import Token from "./Token";
 import TokenType from "./TokenType";
 
 export class Interpreter implements Visitor {
-  interpret(expression: Expr): void {
+  private environment = new Environment();
+
+  interpret(expression: Expr) {
     try {
       const value = this.evaluate(expression);
-      Eevee.log(this.stringify(value));
+      return this.stringify(value);
     } catch (error) {
       if (error instanceof RuntimeError) {
         Eevee.runtimeError(error as RuntimeError);
-      } else {
-        console.error("Unexpected error.", error);
       }
+
+      return null;
     }
+  }
+
+  interpretStmt(statements: Array<Stmt>) {
+    try {
+      statements.forEach((statement) => {
+        this.execute(statement);
+      });
+    } catch (error) {
+      if (error instanceof RuntimeError) Eevee.runtimeError(error);
+      return null;
+    }
+  }
+
+  private evaluate(expr: Expr) {
+    return expr.accept(this);
+  }
+
+  private execute(stmt: Stmt) {
+    return stmt.accept(this);
+  }
+
+  private executeBlock(
+    statements: Array<Stmt | null>,
+    environment: Environment
+  ) {
+    const previous = this.environment;
+
+    try {
+      this.environment = environment;
+
+      statements.forEach((statement) => {
+        if (statement) this.execute(statement);
+      });
+    } finally {
+      this.environment = previous;
+    }
+  }
+
+  public visitBlockStmt(stmt: Block) {
+    this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
+  public visitExpressionStmt(stmt: Expression) {
+    this.evaluate(stmt.expression);
+  }
+
+  public visitPrintStmt(stmt: Print) {
+    const value = this.evaluate(stmt.expression);
+    Eevee.log(this.stringify(value));
+  }
+
+  public visitVarStmt(stmt: Var) {
+    let value = null;
+    if (stmt.initializer) {
+      value = this.evaluate(stmt.initializer);
+    }
+
+    this.environment.define(stmt.name.lexeme, value);
+  }
+
+  public visitAssignStmt(expr: Assign) {
+    const value = this.evaluate(expr.value);
+    this.environment.assign(expr.name, value);
+    return value;
   }
 
   public visitLiteralBooleanExpr(expr: LiteralBoolean): boolean {
@@ -45,6 +115,16 @@ export class Interpreter implements Visitor {
 
   public visitGroupingExpr(expr: Grouping) {
     return this.evaluate(expr.expression);
+  }
+
+  public visitVariableExpr(expr: Variable) {
+    return this.environment.get(expr.name);
+  }
+
+  public visitAssignExpr(expr: Assign) {
+    const value = this.evaluate(expr.value);
+    this.environment.assign(expr.name, value);
+    return value;
   }
 
   public visitConditionalExpr(expr: Conditional) {
@@ -78,13 +158,20 @@ export class Interpreter implements Visitor {
 
   public visitPostfixExpr(expr: Postfix) {
     const left = this.evaluate(expr.left);
+    let variable = null;
+
+    if (expr.left instanceof Variable) {
+      variable = expr.left as Variable;
+    }
 
     switch (expr.operator.type) {
       case TokenType.MINUS_MINUS:
         this.checkNumberOperand(expr.operator, left);
+        if (variable) this.environment.assign(variable.name, left - 1);
         return left - 1;
       case TokenType.PLUS_PLUS:
         this.checkNumberOperand(expr.operator, left);
+        if (variable) this.environment.assign(variable.name, left + 1);
         return left + 1;
       default:
         break;
@@ -149,29 +236,17 @@ export class Interpreter implements Visitor {
     return null;
   }
 
-  private evaluate(expr: Expr) {
-    return expr.accept(this);
-  }
-
-  private checkNumberOperand(operator: Token, operand: number): void {
+  private checkNumberOperand(operator: Token, operand: number) {
     if (typeof operand === "number") return;
     throw new RuntimeError(operator, "Operand must be a number.");
   }
 
-  private checkNumberOperands(
-    operator: Token,
-    left: number,
-    right: number
-  ): void {
+  private checkNumberOperands(operator: Token, left: number, right: number) {
     if (typeof left === "number" && typeof right === "number") return;
     throw new RuntimeError(operator, "Operands must be numbers.");
   }
 
-  private checkDivisionByZero(
-    operator: Token,
-    left: number,
-    right: number
-  ): void {
+  private checkDivisionByZero(operator: Token, left: number, right: number) {
     this.checkNumberOperands(operator, left, right);
     if (left === 0 || right === 0) {
       throw new RuntimeError(operator, "Division by zero is not possible.");

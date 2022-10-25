@@ -12,6 +12,7 @@ class AstGenerator {
     const outputDir: string = argv[2];
 
     this.defineAst(outputDir, "Expr", [
+      "Assign           -> name: Token, value: Expr",
       "Binary           -> left: Expr, operator: Token, right: Expr",
       "Conditional      -> condition: Expr, consequent: Expr, alternate: Expr",
       "Grouping         -> expression: Expr",
@@ -21,6 +22,14 @@ class AstGenerator {
       "LiteralBoolean   -> value: boolean",
       "Postfix          -> left: Expr, operator: Token",
       "Unary            -> operator: Token, right: Expr",
+      "Variable         -> name: Token",
+    ]);
+
+    this.defineAst(outputDir, "Stmt", [
+      "Expression       -> expression: Expr",
+      "Print            -> expression: Expr",
+      "Var              -> name: Token, initializer: Expr | null",
+      "Block            -> statements: Array<Stmt | null>",
     ]);
   }
 
@@ -33,6 +42,10 @@ class AstGenerator {
     const writer: WriteStream = fs.createWriteStream(path, { flags: "w+" });
 
     try {
+      if (baseName === "Stmt") {
+        writer.write(`import { Expr } from "./Expr";`);
+        writer.write("\n");
+      }
       writer.write(`import Token from "./Token";`);
       writer.write("\n\n");
       this.defineVisitor(writer, baseName, types);
