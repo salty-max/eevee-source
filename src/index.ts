@@ -4,9 +4,10 @@
  * (C) 2022-present Maxime Blanc <max@jellycat.fr>
  */
 
-import internal from "stream";
+import readline from "readline";
+
 import AstPrinter from "./AstPrinter";
-import { Binary, Expr, Grouping, Literal, Unary } from "./Expr";
+import Parser from "./Parser";
 import Scanner from "./Scanner";
 import Token from "./Token";
 import TokenType from "./TokenType";
@@ -25,22 +26,14 @@ class Eevee {
     }
 
     // REPL mode.
-    // if (mode === "-e") {
-    //   this.runREPL();
-    // }
+    if (mode === "-e") {
+      this.runREPL();
+    }
 
-    // // File read mode.
-    // if (mode === "-f" && path) {
-    //   this.runFile(path);
-    // }
-
-    const expression: Expr = new Binary(
-      new Unary(new Token(TokenType.MINUS, "-", null, 1), new Literal(123)),
-      new Token(TokenType.STAR, "*", null, 1),
-      new Grouping(new Literal(45.67))
-    );
-
-    console.log(new AstPrinter().print(expression).toString());
+    // File read mode.
+    if (mode === "-f" && path) {
+      this.runFile(path);
+    }
 
     if (mode === "--help") {
       console.log("\x1B[1m\x1b[34m-------- Eevee --------\x1b[0m\n");
@@ -60,32 +53,53 @@ class Eevee {
   }
 
   private static runREPL(): void {
-    process.stdin.on("data", (data) => {
-      if (data.byteLength == 0) {
-        return;
-      }
+    this.greet("-------- Eevee 0.1 --------");
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
 
-      console.log(`> ${data}`);
+    rl.setPrompt("> ");
+    rl.prompt();
 
+    rl.on("line", (line) => {
+      this.run(line);
       this.hadError = false;
+
+      rl.prompt();
+    }).on("close", () => {
+      this.greet("👋   Goodbye!");
+      process.exit(0);
     });
   }
 
   private static run(source: string): void {
     const scanner: Scanner = new Scanner(source);
     const tokens: Array<Token> = scanner.scanTokens();
+    const parser: Parser = new Parser(tokens);
+    const expression = parser.parse();
 
-    tokens.map((token) => {
-      this.log(token.toString());
-    });
+    expression && console.log(new AstPrinter().print(expression).toString());
   }
 
   static log(message: string): void {
     console.log(`\x1B[1m\x1b[34m${message}\x1b[0m`);
   }
 
+  static greet(message: string): void {
+    console.log(`\x1B[1m\x1b[32m${message}\x1b[0m`);
+  }
+
   static error(line: number, column: number, message: string): void {
     this.report(line, column, "", message);
+  }
+
+  static parseError(token: Token, column: number, message: string): void {
+    if (token.type === TokenType.EOF) {
+      this.report(token.line, column, " at end", message);
+    } else {
+      this.report(token.line, column, ` at '${token.lexeme}'`, message);
+    }
   }
 
   static report(
@@ -95,7 +109,7 @@ class Eevee {
     message: string
   ): void {
     console.error(
-      `\x1B[1m\x1b[33mError${where} (${line}:${column}): ${message}\x1b[0m`
+      `\x1B[1m\x1b[31mError${where} (${line}:${column}): ${message}\x1b[0m`
     );
   }
 }

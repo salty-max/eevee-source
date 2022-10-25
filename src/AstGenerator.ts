@@ -12,11 +12,12 @@ class AstGenerator {
     const outputDir: string = argv[2];
 
     this.defineAst(outputDir, "Expr", [
-      "Binary   -> left: Expr, operator: Token, right: Expr",
-      "Grouping -> expression: Expr",
-      "Literal  -> value: Object",
-      "Postfix  -> left: Expr, operator: Token",
-      "Unary    -> operator: Token, right: Expr",
+      "Binary       -> left: Expr, operator: Token, right: Expr",
+      "Conditional  -> condition: Expr, consequent: Expr, alternate: Expr",
+      "Grouping     -> expression: Expr",
+      "Literal      -> value: Object | null",
+      "Postfix      -> left: Expr, operator: Token",
+      "Unary        -> operator: Token, right: Expr",
     ]);
   }
 

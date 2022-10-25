@@ -20,7 +20,7 @@ class Scanner {
       this.scanToken();
     }
 
-    this.tokens.push(new Token(TokenType.EOF, "", null, this.line));
+    this.addToken(TokenType.EOF);
     return this.tokens;
   }
 
@@ -104,7 +104,7 @@ class Scanner {
             this.peekNext() != "/" &&
             !this.isAtEnd()
           ) {
-            if (this.peek() == "\n") this.line++;
+            if (this.peek() === "\n") this.line++;
             this.advance();
           }
 

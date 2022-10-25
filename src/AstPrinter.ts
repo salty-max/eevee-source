@@ -6,6 +6,7 @@ import {
   Literal,
   Unary,
   Postfix,
+  Conditional,
 } from "./Expr";
 
 class AstPrinter implements Visitor<String> {
@@ -18,6 +19,15 @@ class AstPrinter implements Visitor<String> {
       expr.operator.lexeme,
       expr.left,
       expr.right
+    ) as String;
+  }
+
+  public visitConditionalExpr<String>(expr: Conditional): String {
+    return this.parenthesize(
+      "?:",
+      expr.condition,
+      expr.consequent,
+      expr.alternate
     ) as String;
   }
 
