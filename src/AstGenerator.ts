@@ -12,12 +12,15 @@ class AstGenerator {
     const outputDir: string = argv[2];
 
     this.defineAst(outputDir, "Expr", [
-      "Binary       -> left: Expr, operator: Token, right: Expr",
-      "Conditional  -> condition: Expr, consequent: Expr, alternate: Expr",
-      "Grouping     -> expression: Expr",
-      "Literal      -> value: Object | null",
-      "Postfix      -> left: Expr, operator: Token",
-      "Unary        -> operator: Token, right: Expr",
+      "Binary           -> left: Expr, operator: Token, right: Expr",
+      "Conditional      -> condition: Expr, consequent: Expr, alternate: Expr",
+      "Grouping         -> expression: Expr",
+      "LiteralNumber    -> value: number",
+      "LiteralString    -> value: string",
+      "LiteralNull      -> value: null",
+      "LiteralBoolean   -> value: boolean",
+      "Postfix          -> left: Expr, operator: Token",
+      "Unary            -> operator: Token, right: Expr",
     ]);
   }
 
@@ -29,23 +32,27 @@ class AstGenerator {
     const path: string = `${outputDir}/${baseName}.ts`;
     const writer: WriteStream = fs.createWriteStream(path, { flags: "w+" });
 
-    writer.write(`import Token from "./Token";`);
-    writer.write("\n\n");
-    this.defineVisitor(writer, baseName, types);
-    writer.write("\n");
-    writer.write(`export abstract class ${baseName} {`);
-    writer.write("\n");
-    writer.write("  abstract accept<R>(visitor: Visitor<R>): R");
-    writer.write("\n");
-    writer.write("}");
-    writer.write("\n\n");
+    try {
+      writer.write(`import Token from "./Token";`);
+      writer.write("\n\n");
+      this.defineVisitor(writer, baseName, types);
+      writer.write("\n");
+      writer.write(`export abstract class ${baseName} {`);
+      writer.write("\n");
+      writer.write("  abstract accept(visitor: Visitor): any");
+      writer.write("\n");
+      writer.write("}");
+      writer.write("\n\n");
 
-    // The AST classes.
-    types.forEach((type) => {
-      const className: string = type.split("->")[0].trim();
-      const fields = type.split("->")[1].trim();
-      this.defineType(writer, baseName, className, fields);
-    });
+      // The AST classes.
+      types.forEach((type) => {
+        const className: string = type.split("->")[0].trim();
+        const fields = type.split("->")[1].trim();
+        this.defineType(writer, baseName, className, fields);
+      });
+    } finally {
+      writer.close();
+    }
   }
 
   private static defineType(
@@ -82,7 +89,7 @@ class AstGenerator {
     writer.write("  }");
     writer.write("\n\n");
 
-    writer.write("  override accept<R>(visitor: Visitor<R>): R {");
+    writer.write("  override accept(visitor: Visitor): any {");
     writer.write("\n");
     writer.write(`    return visitor.visit${className}${baseName}(this);`);
     writer.write("\n");
@@ -98,13 +105,13 @@ class AstGenerator {
     baseName: string,
     types: Array<string>
   ): void {
-    writer.write("export interface Visitor<R> {");
+    writer.write("export interface Visitor {");
     writer.write("\n");
 
     types.forEach((type) => {
       const typeName: string = type.split("->")[0].trim();
       writer.write(
-        `  visit${typeName}${baseName}<R>(${baseName.toLowerCase()}: ${typeName}): R;`
+        `  visit${typeName}${baseName}(${baseName.toLowerCase()}: ${typeName}): any;`
       );
       writer.write("\n");
     });

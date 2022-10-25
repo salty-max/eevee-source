@@ -3,42 +3,58 @@
  *
  * (C) 2022-present Maxime Blanc <max@jellycat.fr>
  */
-
 import readline from "readline";
+import yargs from "yargs";
 
-import AstPrinter from "./AstPrinter";
+import { Interpreter } from "./Interpreter";
 import Parser from "./Parser";
+import RuntimeError from "./RuntimeError";
 import Scanner from "./Scanner";
 import Token from "./Token";
 import TokenType from "./TokenType";
 
 const fs = require("fs");
 
-class Eevee {
+export class Eevee {
+  private static readonly interpreter: Interpreter = new Interpreter();
   private static hadError: boolean = false;
 
-  public static main(argv: Array<string>): number {
-    const [_node, _path, mode, path] = argv;
-
-    if (argv.length <= 2) {
-      console.log("Usage: eevee --help");
-      process.exit(64);
-    }
+  public static main(): number {
+    const args = yargs(process.argv.slice(2))
+      .usage("$0 <mode>")
+      .command("eevee", "Eevee interpreter.")
+      .option("mode", {
+        describe: "Mode to run",
+        alias: "m",
+        type: "string",
+      })
+      .option("filepath", {
+        describe: "Path to file to interpret",
+        alias: "f",
+        type: "string",
+      })
+      .option("expression", {
+        describe: "Expression to interpret",
+        alias: "e",
+        type: "string",
+      })
+      .help()
+      .alias("help", "h")
+      .parseSync();
 
     // REPL mode.
-    if (mode === "-e") {
+    if (args.mode === "int") {
       this.runREPL();
     }
 
-    // File read mode.
-    if (mode === "-f" && path) {
-      this.runFile(path);
+    // Expression mode.
+    if (args.mode === "expr" && args.expression) {
+      this.runExpr(args.expression);
     }
 
-    if (mode === "--help") {
-      console.log("\x1B[1m\x1b[34m-------- Eevee --------\x1b[0m\n");
-      console.log("-e : REPL mode\n");
-      console.log("-f [path] : File reader mode\n");
+    // File read mode.
+    if (args.mode === "file" && args.filepath) {
+      this.runFile(args.filepath.toString());
     }
 
     return 0;
@@ -46,7 +62,16 @@ class Eevee {
 
   private static runFile(path: string): void {
     const src = fs.readFileSync(path, "utf-8");
+    this.greet("-------- Eevee 0.1 --------");
     this.run(src);
+
+    // Indicate an error in the exit code.
+    if (this.hadError) process.exit(70);
+  }
+
+  private static runExpr(source: string): void {
+    this.greet("-------- Eevee 0.1 --------");
+    this.run(source);
 
     // Indicate an error in the exit code.
     if (this.hadError) process.exit(70);
@@ -63,8 +88,8 @@ class Eevee {
     rl.prompt();
 
     rl.on("line", (line) => {
-      this.run(line);
       this.hadError = false;
+      this.run(line);
 
       rl.prompt();
     }).on("close", () => {
@@ -78,8 +103,9 @@ class Eevee {
     const tokens: Array<Token> = scanner.scanTokens();
     const parser: Parser = new Parser(tokens);
     const expression = parser.parse();
+    if (this.hadError) return;
 
-    expression && console.log(new AstPrinter().print(expression).toString());
+    expression && this.interpreter.interpret(expression);
   }
 
   static log(message: string): void {
@@ -102,6 +128,12 @@ class Eevee {
     }
   }
 
+  static runtimeError(error: RuntimeError): void {
+    console.error(
+      `\x1B[1m\x1b[31mRuntime error -> (${error.token.line} : ${error.token.column})\n${error.message}\x1b[0m`
+    );
+  }
+
   static report(
     line: number,
     column: number,
@@ -114,6 +146,6 @@ class Eevee {
   }
 }
 
-Eevee.main(process.argv);
+Eevee.main();
 
 export default Eevee;

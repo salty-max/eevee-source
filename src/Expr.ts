@@ -1,16 +1,19 @@
 import Token from "./Token";
 
-export interface Visitor<R> {
-  visitBinaryExpr<R>(expr: Binary): R;
-  visitConditionalExpr<R>(expr: Conditional): R;
-  visitGroupingExpr<R>(expr: Grouping): R;
-  visitLiteralExpr<R>(expr: Literal): R;
-  visitPostfixExpr<R>(expr: Postfix): R;
-  visitUnaryExpr<R>(expr: Unary): R;
+export interface Visitor {
+  visitBinaryExpr(expr: Binary): any;
+  visitConditionalExpr(expr: Conditional): any;
+  visitGroupingExpr(expr: Grouping): any;
+  visitLiteralNumberExpr(expr: LiteralNumber): any;
+  visitLiteralStringExpr(expr: LiteralString): any;
+  visitLiteralNullExpr(expr: LiteralNull): any;
+  visitLiteralBooleanExpr(expr: LiteralBoolean): any;
+  visitPostfixExpr(expr: Postfix): any;
+  visitUnaryExpr(expr: Unary): any;
 }
 
 export abstract class Expr {
-  abstract accept<R>(visitor: Visitor<R>): R
+  abstract accept(visitor: Visitor): any
 }
 
 export class Binary extends Expr {
@@ -25,7 +28,7 @@ export class Binary extends Expr {
     this.right = right;
   }
 
-  override accept<R>(visitor: Visitor<R>): R {
+  override accept(visitor: Visitor): any {
     return visitor.visitBinaryExpr(this);
   }
 }
@@ -42,7 +45,7 @@ export class Conditional extends Expr {
     this.alternate = alternate;
   }
 
-  override accept<R>(visitor: Visitor<R>): R {
+  override accept(visitor: Visitor): any {
     return visitor.visitConditionalExpr(this);
   }
 }
@@ -55,21 +58,60 @@ export class Grouping extends Expr {
     this.expression = expression;
   }
 
-  override accept<R>(visitor: Visitor<R>): R {
+  override accept(visitor: Visitor): any {
     return visitor.visitGroupingExpr(this);
   }
 }
 
-export class Literal extends Expr {
-  value: Object | null;
+export class LiteralNumber extends Expr {
+  value: number;
 
-  constructor(value: Object | null) {
+  constructor(value: number) {
     super();
     this.value = value;
   }
 
-  override accept<R>(visitor: Visitor<R>): R {
-    return visitor.visitLiteralExpr(this);
+  override accept(visitor: Visitor): any {
+    return visitor.visitLiteralNumberExpr(this);
+  }
+}
+
+export class LiteralString extends Expr {
+  value: string;
+
+  constructor(value: string) {
+    super();
+    this.value = value;
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitLiteralStringExpr(this);
+  }
+}
+
+export class LiteralNull extends Expr {
+  value: null;
+
+  constructor(value: null) {
+    super();
+    this.value = value;
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitLiteralNullExpr(this);
+  }
+}
+
+export class LiteralBoolean extends Expr {
+  value: boolean;
+
+  constructor(value: boolean) {
+    super();
+    this.value = value;
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitLiteralBooleanExpr(this);
   }
 }
 
@@ -83,7 +125,7 @@ export class Postfix extends Expr {
     this.operator = operator;
   }
 
-  override accept<R>(visitor: Visitor<R>): R {
+  override accept(visitor: Visitor): any {
     return visitor.visitPostfixExpr(this);
   }
 }
@@ -98,7 +140,7 @@ export class Unary extends Expr {
     this.right = right;
   }
 
-  override accept<R>(visitor: Visitor<R>): R {
+  override accept(visitor: Visitor): any {
     return visitor.visitUnaryExpr(this);
   }
 }

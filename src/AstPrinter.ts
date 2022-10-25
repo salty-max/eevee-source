@@ -3,52 +3,65 @@ import {
   Expr,
   Binary,
   Grouping,
-  Literal,
   Unary,
   Postfix,
   Conditional,
+  LiteralNumber,
+  LiteralBoolean,
+  LiteralNull,
+  LiteralString,
 } from "./Expr";
 
-class AstPrinter implements Visitor<String> {
-  print(expr: Expr): String {
+class AstPrinter implements Visitor {
+  print(expr: Expr): string {
     return expr.accept(this);
   }
 
-  public visitBinaryExpr<String>(expr: Binary): String {
-    return this.parenthesize(
-      expr.operator.lexeme,
-      expr.left,
-      expr.right
-    ) as String;
+  public visitBinaryExpr(expr: Binary): string {
+    return this.parenthesize(expr.operator.lexeme, expr.left, expr.right);
   }
 
-  public visitConditionalExpr<String>(expr: Conditional): String {
+  public visitConditionalExpr(expr: Conditional): string {
     return this.parenthesize(
       "?:",
       expr.condition,
       expr.consequent,
       expr.alternate
-    ) as String;
+    );
   }
 
-  public visitGroupingExpr<String>(expr: Grouping): String {
-    return this.parenthesize("group", expr.expression) as String;
+  public visitGroupingExpr(expr: Grouping): string {
+    return this.parenthesize("group", expr.expression);
   }
 
-  public visitLiteralExpr<String>(expr: Literal): String {
-    if (expr.value === null) return "nil" as String;
-    return expr.value.toString() as String;
+  public visitLiteralNumberExpr(expr: LiteralNumber): string {
+    if (expr.value === null) return "nil";
+    return expr.value.toString();
   }
 
-  public visitUnaryExpr<String>(expr: Unary): String {
-    return this.parenthesize(expr.operator.lexeme, expr.right) as String;
+  public visitLiteralBooleanExpr(expr: LiteralBoolean): string {
+    if (expr.value === null) return "nil";
+    return expr.value.toString();
   }
 
-  public visitPostfixExpr<String>(expr: Postfix): String {
-    return this.parenthesize(expr.operator.lexeme, expr.left) as String;
+  public visitLiteralNullExpr(_expr: LiteralNull): string {
+    return "nil";
   }
 
-  private parenthesize(name: string, ...exprs: Array<Expr>): String {
+  public visitLiteralStringExpr(expr: LiteralString): string {
+    if (expr.value === null) return "nil";
+    return expr.value;
+  }
+
+  public visitUnaryExpr(expr: Unary): string {
+    return this.parenthesize(expr.operator.lexeme, expr.right);
+  }
+
+  public visitPostfixExpr(expr: Postfix): string {
+    return this.parenthesize(expr.operator.lexeme, expr.left);
+  }
+
+  private parenthesize(name: string, ...exprs: Array<Expr>): string {
     let builder = `(${name}`;
 
     exprs.forEach((expr) => {

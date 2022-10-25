@@ -225,9 +225,13 @@ class Scanner {
     return this.current >= this.source.length;
   }
 
-  private addToken(type: TokenType, literal?: Object) {
+  private addToken(type: TokenType): void;
+  private addToken(type: TokenType, literal: any): void;
+  private addToken(type: TokenType, literal?: any): void {
     const text: string = this.source.substring(this.start, this.current);
-    this.tokens.push(new Token(type, text, literal ?? null, this.line));
+    this.tokens.push(
+      new Token(type, text, literal ?? null, this.line, this.current)
+    );
   }
 
   private static keywords: Map<string, TokenType>;

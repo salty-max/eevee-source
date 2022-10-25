@@ -1,12 +1,13 @@
-import { match } from "assert";
-import { consumers } from "stream";
 import Eevee from ".";
 import {
   Binary,
   Conditional,
   Expr,
   Grouping,
-  Literal,
+  LiteralBoolean,
+  LiteralNull,
+  LiteralNumber,
+  LiteralString,
   Postfix,
   Unary,
 } from "./Expr";
@@ -26,7 +27,7 @@ class Parser {
   parse(): Expr | null {
     try {
       return this.expression();
-    } catch (error: unknown) {
+    } catch (error: any) {
       return null;
     }
   }
@@ -128,13 +129,13 @@ class Parser {
   }
 
   private primary(): Expr {
-    if (this.match(TokenType.FALSE)) return new Literal(false);
-    else if (this.match(TokenType.TRUE)) return new Literal(true);
-    else if (this.match(TokenType.NIL)) return new Literal(null);
-    else if (this.match(TokenType.NUMBER, TokenType.STRING))
-      return new Literal(this.previous().literal);
-    else if (this.match(TokenType.IDENTIFIER))
-      return new Literal(this.previous());
+    if (this.match(TokenType.FALSE)) return new LiteralBoolean(false);
+    else if (this.match(TokenType.TRUE)) return new LiteralBoolean(true);
+    else if (this.match(TokenType.NIL)) return new LiteralNull(null);
+    else if (this.match(TokenType.NUMBER))
+      return new LiteralNumber(this.previous().literal);
+    else if (this.match(TokenType.STRING))
+      return new LiteralString(this.previous().literal);
     else if (this.match(TokenType.LEFT_PAREN)) {
       const expr: Expr = this.expression();
       this.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
