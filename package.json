@@ -1,5 +1,5 @@
 {
-  "name": "gero-source",
+  "name": "eevee-source",
   "license": "MIT",
   "version": "0.1.1",
   "description": "A dynamic programminbg language with simple syntax, functional heart and OOP support",
@@ -18,7 +18,8 @@
     "test": "node ./__tests__/run",
     "lint": "eslint . --fix",
     "build": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",
@@ -27,6 +28,9 @@
     "@typescript-eslint/eslint-plugin": "^5.40.1",
     "@typescript-eslint/parser": "^5.40.1",
     "eslint": "^8.26.0",
+    "husky": "^7.0.0",
+    "prettier": "^2.7.1",
+    "pretty-quick": "^3.1.3",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
   },

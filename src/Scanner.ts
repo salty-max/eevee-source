@@ -247,6 +247,7 @@ class Scanner {
   static {
     this.keywords = new Map<string, TokenType>();
     this.keywords.set("and", TokenType.AND);
+    this.keywords.set("break", TokenType.BREAK);
     this.keywords.set("class", TokenType.CLASS);
     this.keywords.set("def", TokenType.DEF);
     this.keywords.set("do", TokenType.DO);

@@ -1,4 +1,4 @@
-import { Expr } from "./Expr";
+import { Expr } from "./Expr";
 import Token from "./Token";
 
 export interface Visitor {
@@ -8,10 +8,11 @@ export interface Visitor {
   visitVarStmt(stmt: Var): any;
   visitBlockStmt(stmt: Block): any;
   visitWhileStmt(stmt: While): any;
+  visitBreakStmt(stmt: Break): any;
 }
 
 export abstract class Stmt {
-  abstract accept(visitor: Visitor): any
+  abstract accept(visitor: Visitor): any;
 }
 
 export class Expression extends Stmt {
@@ -32,7 +33,11 @@ export class If extends Stmt {
   consequent: Array<Stmt | null>;
   alternate: Array<Stmt | null>;
 
-  constructor(condition: Expr, consequent: Array<Stmt | null>, alternate: Array<Stmt | null>) {
+  constructor(
+    condition: Expr,
+    consequent: Array<Stmt | null>,
+    alternate: Array<Stmt | null>
+  ) {
     super();
     this.condition = condition;
     this.consequent = consequent;
@@ -100,3 +105,12 @@ export class While extends Stmt {
   }
 }
 
+export class Break extends Stmt {
+  constructor() {
+    super();
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitBreakStmt(this);
+  }
+}

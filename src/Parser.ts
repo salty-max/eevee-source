@@ -3,7 +3,6 @@ import {
   Assign,
   Binary,
   Conditional,
-  Expr,
   Grouping,
   LiteralBoolean,
   LiteralNull,
@@ -14,7 +13,7 @@ import {
   Unary,
   Variable,
 } from "./Expr";
-import { Block, Expression, If, Print, Stmt, Var, While } from "./Stmt";
+import { Block, Break, Expression, If, Print, Stmt, Var, While } from "./Stmt";
 import Token from "./Token";
 import TokenType from "./TokenType";
 
@@ -25,6 +24,7 @@ class Parser {
   private current: number = 0;
   private allowExpression: boolean = false;
   private foundExpression: boolean = false;
+  private loopDepth = 0;
 
   constructor(tokens: Array<Token>) {
     this.tokens = tokens;
@@ -73,6 +73,7 @@ class Parser {
     if (this.match(TokenType.WHILE)) return this.whileStatement();
     if (this.match(TokenType.FOR)) return this.forStatement();
     if (this.match(TokenType.DO)) return new Block(this.block());
+    if (this.match(TokenType.BREAK)) return this.breakStatement();
 
     return this.expressionStatement();
   }
@@ -128,9 +129,15 @@ class Parser {
 
   private whileStatement() {
     const condition = this.expression();
-    const body = this.statement();
 
-    return new While(condition, body);
+    try {
+      this.loopDepth++;
+      const body = this.statement();
+
+      return new While(condition, body);
+    } finally {
+      this.loopDepth--;
+    }
   }
 
   private forStatement() {
@@ -156,23 +163,37 @@ class Parser {
       increment = this.expression();
     }
 
-    let body = this.statement();
+    try {
+      this.loopDepth++;
 
-    if (increment !== null) {
-      body = new Block([body, new Expression(increment)]);
+      let body = this.statement();
+
+      if (increment !== null) {
+        body = new Block([body, new Expression(increment)]);
+      }
+
+      if (condition == null) {
+        condition = new LiteralBoolean(true);
+      }
+
+      body = new While(condition, body);
+
+      if (initializer !== null) {
+        body = new Block([initializer, body]);
+      }
+
+      return body;
+    } finally {
+      this.loopDepth--;
     }
+  }
 
-    if (condition == null) {
-      condition = new LiteralBoolean(true);
+  private breakStatement() {
+    if (this.loopDepth === 0) {
+      this.error(this.previous(), "Must be inside a loop tp use 'break'.");
     }
-
-    body = new While(condition, body);
-
-    if (initializer !== null) {
-      body = new Block([initializer, body]);
-    }
-
-    return body;
+    this.consume(TokenType.SEMICOLON, "Expect ';' after 'break'");
+    return new Break();
   }
 
   private printStatement() {

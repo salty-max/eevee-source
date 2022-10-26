@@ -1,6 +1,4 @@
-import fs, { write, WriteStream } from "fs";
-import { REPLWriter } from "repl";
-import Eevee from ".";
+import fs, { WriteStream } from "fs";
 
 class AstGenerator {
   public static main(argv: Array<string>): void {
@@ -8,6 +6,8 @@ class AstGenerator {
       console.error("Usage: generate_ast <output_directory>");
       process.exit(64);
     }
+
+    console.log("Generating AST...");
 
     const outputDir: string = argv[2];
 
@@ -33,7 +33,10 @@ class AstGenerator {
       "Var              -> name: Token, initializer: Expr | null",
       "Block            -> statements: Array<Stmt | null>",
       "While            -> condition: Expr, body: Stmt",
+      "Break            -> ",
     ]);
+
+    console.log("AST generated");
   }
 
   private static defineAst(
@@ -81,7 +84,12 @@ class AstGenerator {
     writer.write("\n");
 
     // Store parameters in field.
-    const fields: Array<string> = fieldList.split(", ");
+    let fields = new Array<string>();
+    if (fieldList.length === 0) {
+      fields = [];
+    } else {
+      fields = fieldList.split(", ");
+    }
 
     // Fields.
     fields.forEach((field) => {

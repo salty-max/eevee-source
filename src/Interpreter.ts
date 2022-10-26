@@ -17,9 +17,11 @@ import {
   Visitor,
 } from "./Expr";
 import RuntimeError from "./RuntimeError";
-import { Block, Expression, If, Print, Stmt, Var, While } from "./Stmt";
+import { Block, Break, Expression, If, Print, Stmt, Var, While } from "./Stmt";
 import Token from "./Token";
 import TokenType from "./TokenType";
+
+export class BreakException extends Error {}
 
 export class Interpreter implements Visitor {
   private environment = new Environment();
@@ -92,10 +94,18 @@ export class Interpreter implements Visitor {
   }
 
   public visitWhileStmt(stmt: While) {
-    while (this.evaluate(stmt.condition)) {
-      this.execute(stmt.body);
+    try {
+      while (this.evaluate(stmt.condition)) {
+        this.execute(stmt.body);
+      }
+    } catch (error: unknown) {
+      // Do nothing
     }
     return null;
+  }
+
+  public visitBreakStmt(stmt: Break) {
+    throw new BreakException();
   }
 
   public visitPrintStmt(stmt: Print) {
