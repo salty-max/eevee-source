@@ -7,6 +7,7 @@ export interface Visitor {
   visitPrintStmt(stmt: Print): any;
   visitVarStmt(stmt: Var): any;
   visitBlockStmt(stmt: Block): any;
+  visitWhileStmt(stmt: While): any;
 }
 
 export abstract class Stmt {
@@ -81,6 +82,21 @@ export class Block extends Stmt {
 
   override accept(visitor: Visitor): any {
     return visitor.visitBlockStmt(this);
+  }
+}
+
+export class While extends Stmt {
+  condition: Expr;
+  body: Stmt;
+
+  constructor(condition: Expr, body: Stmt) {
+    super();
+    this.condition = condition;
+    this.body = body;
+  }
+
+  override accept(visitor: Visitor): any {
+    return visitor.visitWhileStmt(this);
   }
 }
 

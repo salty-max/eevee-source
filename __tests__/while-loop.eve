@@ -1,0 +1,9 @@
+let counter = 10;
+let result = 0;
+
+while counter > 0 do
+  counter--;
+  result++;
+end
+
+print result;

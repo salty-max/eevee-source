@@ -1,4 +1,4 @@
-import Eevee from ".";
+import { Eevee } from ".";
 import {
   Assign,
   Binary,
@@ -14,7 +14,7 @@ import {
   Unary,
   Variable,
 } from "./Expr";
-import { Block, Expression, If, Print, Stmt, Var } from "./Stmt";
+import { Block, Expression, If, Print, Stmt, Var, While } from "./Stmt";
 import Token from "./Token";
 import TokenType from "./TokenType";
 
@@ -67,16 +67,12 @@ class Parser {
     }
   }
 
-  private statement() {
-    if (this.match(TokenType.PRINT)) {
-      return this.printStatement();
-    }
-    if (this.match(TokenType.IF)) {
-      return this.ifStatement();
-    }
-    if (this.match(TokenType.DO)) {
-      return new Block(this.block());
-    }
+  private statement(): Stmt {
+    if (this.match(TokenType.PRINT)) return this.printStatement();
+    if (this.match(TokenType.IF)) return this.ifStatement();
+    if (this.match(TokenType.WHILE)) return this.whileStatement();
+    if (this.match(TokenType.FOR)) return this.forStatement();
+    if (this.match(TokenType.DO)) return new Block(this.block());
 
     return this.expressionStatement();
   }
@@ -130,13 +126,62 @@ class Parser {
     return new If(condition, consequent, alternate);
   }
 
-  private printStatement(): Stmt {
+  private whileStatement() {
+    const condition = this.expression();
+    const body = this.statement();
+
+    return new While(condition, body);
+  }
+
+  private forStatement() {
+    let initializer;
+
+    if (this.match(TokenType.SEMICOLON)) {
+      initializer = null;
+    } else if (this.match(TokenType.LET)) {
+      initializer = this.varDeclaration();
+    } else {
+      initializer = this.expressionStatement();
+    }
+
+    let condition = null;
+    if (!this.check(TokenType.SEMICOLON)) {
+      condition = this.expression();
+    }
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after condition.");
+
+    let increment = null;
+    if (!this.check(TokenType.DO)) {
+      increment = this.expression();
+    }
+
+    let body = this.statement();
+
+    if (increment !== null) {
+      body = new Block([body, new Expression(increment)]);
+    }
+
+    if (condition == null) {
+      condition = new LiteralBoolean(true);
+    }
+
+    body = new While(condition, body);
+
+    if (initializer !== null) {
+      body = new Block([initializer, body]);
+    }
+
+    return body;
+  }
+
+  private printStatement() {
     const value = this.expression();
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
     return new Print(value);
   }
 
-  private varDeclaration(): Stmt {
+  private varDeclaration() {
     const name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
     let initializer = null;
 

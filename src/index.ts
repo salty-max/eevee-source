@@ -69,6 +69,9 @@ export class Eevee {
 
     // Indicate an error in the exit code.
     if (this.hadError) process.exit(70);
+
+    this.greet("👋   Goodbye!");
+    process.exit(0);
   }
 
   private static runExpr(source: string): void {
@@ -77,6 +80,9 @@ export class Eevee {
 
     // Indicate an error in the exit code.
     if (this.hadError) process.exit(70);
+
+    this.greet("👋   Goodbye!");
+    process.exit(0);
   }
 
   private static runREPL(): void {

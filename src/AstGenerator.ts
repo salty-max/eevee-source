@@ -32,6 +32,7 @@ class AstGenerator {
       "Print            -> expression: Expr",
       "Var              -> name: Token, initializer: Expr | null",
       "Block            -> statements: Array<Stmt | null>",
+      "While            -> condition: Expr, body: Stmt",
     ]);
   }
 

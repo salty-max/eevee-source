@@ -17,7 +17,7 @@ import {
   Visitor,
 } from "./Expr";
 import RuntimeError from "./RuntimeError";
-import { Block, Expression, If, Print, Stmt, Var } from "./Stmt";
+import { Block, Expression, If, Print, Stmt, Var, While } from "./Stmt";
 import Token from "./Token";
 import TokenType from "./TokenType";
 
@@ -88,6 +88,13 @@ export class Interpreter implements Visitor {
       this.executeBlock(stmt.alternate, new Environment(this.environment));
     }
 
+    return null;
+  }
+
+  public visitWhileStmt(stmt: While) {
+    while (this.evaluate(stmt.condition)) {
+      this.execute(stmt.body);
+    }
     return null;
   }
 
@@ -194,11 +201,11 @@ export class Interpreter implements Visitor {
     switch (expr.operator.type) {
       case TokenType.MINUS_MINUS:
         this.checkNumberOperand(expr.operator, left);
-        if (variable) this.environment.assign(variable.name, left - 1);
+        if (variable !== null) this.environment.assign(variable.name, left - 1);
         return left - 1;
       case TokenType.PLUS_PLUS:
         this.checkNumberOperand(expr.operator, left);
-        if (variable) this.environment.assign(variable.name, left + 1);
+        if (variable !== null) this.environment.assign(variable.name, left + 1);
         return left + 1;
       default:
         break;
@@ -283,8 +290,8 @@ export class Interpreter implements Visitor {
   }
 
   private isTruthy(object: any): boolean {
-    if (object === null) return false;
-    if (object instanceof Boolean) return Boolean(object);
+    if (object === null || object === undefined) return false;
+    if (typeof object === "boolean") return object;
     return true;
   }
 
